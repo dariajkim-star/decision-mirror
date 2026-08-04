@@ -11,6 +11,7 @@
   chart4_keywords.png       상위 키워드 (정렬 가로막대)
 """
 import csv
+import random
 import re
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -90,9 +91,11 @@ def chart1_channel_mix(rows):
     emos = [e for e, _ in Counter(
         {k: sum(per_ch[c][k] for c in channels) for k in LEXICON}).most_common()]
 
-    # 종목 보유 커뮤니티를 위에, 일반 경제채널을 아래에 배치해 대비
-    HOLDER = ["네이버 종목토론방", "디시 주식갤", "유튜브 삼프로TV"]
-    channels = [c for c in HOLDER if c in channels] + [c for c in channels if c not in HOLDER]
+    # 종목 중심 커뮤니티를 위에, 일반 경제채널을 아래에 배치해 대비
+    # 주의: '보유 여부'는 측정되지 않았다 — 이건 채널 유형 구분이지 투자자 속성 구분이 아니다
+    STOCK_CENTERED = ["네이버 종목토론방", "디시 주식갤", "유튜브 삼프로TV"]
+    channels = [c for c in STOCK_CENTERED if c in channels] + \
+               [c for c in channels if c not in STOCK_CENTERED]
 
     fig, ax = plt.subplots(figsize=(10.5, 4.8))
     left = defaultdict(float)
@@ -125,8 +128,9 @@ def chart1_channel_mix(rows):
                 fontweight="bold" if emo == FOCUS else "normal")
 
     strip_axes(ax)
+    # y축 라벨에 채널별 감정 게시글 n을 병기 — 20건 채널과 300건 채널이 같은 무게로 안 보이도록
     ax.set_yticks(list(range(len(channels)))[::-1])
-    ax.set_yticklabels(channels, fontsize=10.5, color=INK)
+    ax.set_yticklabels([f"{c} (n={totals[c]})" for c in channels], fontsize=10.5, color=INK)
     ax.set_xlim(0, 100)
     ax.set_ylim(-0.55, len(channels) + 0.1)
 
@@ -135,17 +139,19 @@ def chart1_channel_mix(rows):
         k = max(d, key=d.get)
         return k, d[k] / (sum(d.values()) or 1) * 100
 
-    holders = [c for c in channels if c in HOLDER]
-    others = [c for c in channels if c not in HOLDER]
+    holders = [c for c in channels if c in STOCK_CENTERED]
+    others = [c for c in channels if c not in STOCK_CENTERED]
     lo_ch = others[0] if others else channels[-1]
     lo_emo, lo_pct = top_emo(lo_ch)
     hi_range = [top_emo(c)[1] for c in holders]
     title_block(fig,
-                f"물린 사람은 분노하고, 지켜보는 사람은 불안해한다 — 같은 시장, 다른 감정",
-                f"종목 보유 커뮤니티 3곳은 모두 '{FOCUS}'이 1위({min(hi_range):.0f}~{max(hi_range):.0f}%), "
-                f"일반 경제채널({lo_ch.replace('유튜브 ', '')})은 '{lo_emo}'이 1위({lo_pct:.0f}%)")
+                "종목 중심 커뮤니티에서는 분노·불신이, 일반 경제채널에서는 불안·공포가 두드러진다",
+                f"종목 중심 채널 3곳은 '{FOCUS}' 비중이 가장 높았다({min(hi_range):.0f}~{max(hi_range):.0f}%). "
+                f"일반 경제채널({lo_ch.replace('유튜브 ', '')})은 '{lo_emo}'이 1위({lo_pct:.0f}%)\n"
+                "→ 투자 포지션과 밀접한 커뮤니티일수록 분노·불신 표현이 많이 나타날 가능성. "
+                "실제 보유·손실 여부는 미측정, 후속 조사 필요")
     source_block(fig, f"감정 시그널 보유 글 {sum(totals.values()):,}건 기준, 중복 태깅 포함")
-    plt.subplots_adjust(top=0.68, bottom=0.12, left=0.17, right=0.98)
+    plt.subplots_adjust(top=0.68, bottom=0.12, left=0.22, right=0.98)
     plt.savefig(OUT / "chart1_channel_mix.png", dpi=150)
     plt.close()
     print("chart1 저장")
@@ -175,33 +181,59 @@ def chart2_stock_density(rows):
     strip_axes(ax)
     ax.set_yticks(y)
     ax.set_yticklabels(order, fontsize=10.5, color=INK)
-    for yy, v in zip(y, vals):
+    # 비율 옆에 분자/분모를 함께 표기 — 종목별 표본 크기 차이를 숨기지 않는다
+    for yy, s, v in zip(y, order, vals):
         lx = max(v + max(vals) * 0.015, mean_v + max(vals) * 0.02)  # 평균선과 겹침 방지
-        ax.text(lx, yy, f"{v:.0f}%", va="center", fontsize=10,
+        ax.text(lx, yy, f"{v:.1f}%", va="center", fontsize=10,
                 color=INK if v >= mean_v else MUTED,
                 fontweight="bold" if v >= mean_v else "normal")
+        ax.text(lx + max(vals) * 0.075, yy, f"({sig[s]}/{tot[s]})", va="center",
+                fontsize=8.5, color=MUTED)
     ax.axvline(mean_v, color=MUTED, lw=1, ls=(0, (4, 3)), zorder=0)
-    ax.text(mean_v, len(order) - 0.4, f"전체 평균 {mean_v:.0f}%", ha="center",
+    ax.text(mean_v, len(order) - 0.4, f"전체 평균 {mean_v:.1f}%", ha="center",
             fontsize=9, color=MUTED)
-    ax.set_xlim(0, max(vals) * 1.12)
+    ax.set_xlim(0, max(vals) * 1.30)
 
     title_block(fig,
-                f"감정 과열은 특정 종목의 문제가 아니다 — 10개 종목 전부 "
-                f"{min(vals):.0f}~{max(vals):.0f}% 좁은 구간",
-                "종목을 바꿔도 감정 밀도는 그대로 → 개입 대상은 '종목'이 아니라 '투자자의 상태'여야 한다")
-    source_block(fig, f"네이버 종목토론방 {sum(tot[s] for s in stocks):,}건")
-    plt.subplots_adjust(top=0.76, bottom=0.10, left=0.16, right=0.97)
+                f"감정 표현 비율은 10개 종목 모두 {min(vals):.0f}~{max(vals):.0f}% 범위에 분포했다",
+                "분석 대상 안에서는 특정 한두 종목에만 감정 표현이 집중되지 않았다.\n"
+                "→ 종목 특성뿐 아니라 투자자와 커뮤니티의 상태를 함께 볼 필요가 있다")
+    source_block(fig, f"네이버 종목토론방 {sum(tot[s] for s in stocks):,}건, "
+                      "괄호는 (감정 태깅 글/전체 글)")
+    plt.subplots_adjust(top=0.74, bottom=0.10, left=0.16, right=0.97)
     plt.savefig(OUT / "chart2_stock_density.png", dpi=150)
     plt.close()
     print("chart2 저장")
 
 
 # ─────────────────────────────────────────────────────────────
-def chart3_amplification(rows):
-    """질문: 감정글이 더 확산되는가? → 채널 내 배수 비교 (1.0배 기준선)
+def _bootstrap_ci(emo: list[int], non: list[int], iters=2000, seed=42):
+    """평균비의 부트스트랩 95% 신뢰구간. 공감수는 극단값에 민감해 CI가 필수."""
+    rng = random.Random(seed)
+    ratios = []
+    for _ in range(iters):
+        e = [emo[rng.randrange(len(emo))] for _ in range(len(emo))]
+        n = [non[rng.randrange(len(non))] for _ in range(len(non))]
+        me, mn = sum(e) / len(e), sum(n) / len(n)
+        if mn > 0:
+            ratios.append(me / mn)
+    ratios.sort()
+    return ratios[int(len(ratios) * 0.025)], ratios[int(len(ratios) * 0.975)]
 
-    주의: 채널마다 공감수 절대 규모가 달라(슈카월드 평균 25 vs 토론방 2),
-    채널을 섞으면 결과가 왜곡된다. 반드시 채널 '내부'에서 비교한다.
+
+def _median(xs: list[int]) -> float:
+    s = sorted(xs)
+    m = len(s) // 2
+    return float(s[m]) if len(s) % 2 else (s[m - 1] + s[m]) / 2
+
+
+def chart3_amplification(rows):
+    """질문: 감정글이 더 많은 반응을 받는가? → 채널 내 평균비 + 부트스트랩 CI
+
+    주의 1: 채널마다 공감수 절대 규모가 달라(슈카월드 평균 25 vs 토론방 2),
+            채널을 섞으면 왜곡된다. 반드시 채널 '내부'에서 비교한다.
+    주의 2: 공감수는 0이 많고 일부 인기글에 몰려 평균이 극단값에 흔들린다.
+            → 중앙값·상위5개 제외·부트스트랩 CI를 함께 산출해 강건성을 확인한다.
     """
     stat = defaultdict(lambda: {"emo": [], "non": []})
     for r in rows:
@@ -213,38 +245,65 @@ def chart3_amplification(rows):
 
     data = []
     for ch, d in stat.items():
-        if len(d["emo"]) < 30 or len(d["non"]) < 30:
+        emo, non = d["emo"], d["non"]
+        if len(emo) < 30 or len(non) < 30:
             continue
-        ae, an = sum(d["emo"]) / len(d["emo"]), sum(d["non"]) / len(d["non"])
-        data.append((ch, ae / an, ae, an, len(d["emo"])))
-    data.sort(key=lambda x: -x[1])
-    labels = [d[0] for d in data]
-    ratios = [d[1] for d in data]
+        ae, an = sum(emo) / len(emo), sum(non) / len(non)
+        # 상위 5개 제외 후에도 방향이 유지되는지 (인기글 1~2개가 끈 결과인지 확인)
+        e_trim, n_trim = sorted(emo)[:-5], sorted(non)[:-5]
+        trim_ratio = ((sum(e_trim) / len(e_trim)) / (sum(n_trim) / len(n_trim))
+                      if sum(n_trim) else float("nan"))
+        lo, hi = _bootstrap_ci(emo, non)
+        data.append({
+            "ch": ch, "ratio": ae / an, "ae": ae, "an": an,
+            "ne": len(emo), "nn": len(non),
+            "me": _median(emo), "mn": _median(non),
+            "trim": trim_ratio, "lo": lo, "hi": hi,
+        })
+    data.sort(key=lambda x: -x["ratio"])
 
-    fig, ax = plt.subplots(figsize=(9.5, 4.2))
-    y = list(range(len(labels)))[::-1]
-    colors = [NAVY if r > 1 else GRAYS[2] for r in ratios]
-    ax.barh(y, ratios, color=colors, height=0.55)
+    fig, ax = plt.subplots(figsize=(10, 4.8))
+    y = list(range(len(data)))[::-1]
+    # CI가 1.0을 넘지 않는(=유의한) 경우만 강조
+    colors = [NAVY if d["lo"] > 1 else GRAYS[2] for d in data]
+    ax.barh(y, [d["ratio"] for d in data], color=colors, height=0.5)
+    # 부트스트랩 95% CI 오차막대
+    for yy, d in zip(y, data):
+        ax.plot([d["lo"], d["hi"]], [yy, yy], color=INK if d["lo"] > 1 else MUTED,
+                lw=1.2, solid_capstyle="butt", zorder=3)
+        for x in (d["lo"], d["hi"]):
+            ax.plot([x, x], [yy - 0.09, yy + 0.09],
+                    color=INK if d["lo"] > 1 else MUTED, lw=1.2, zorder=3)
+
     strip_axes(ax)
     ax.set_yticks(y)
-    ax.set_yticklabels(labels, fontsize=10.5, color=INK)
-    for yy, (ch, ratio, ae, an, n) in zip(y, data):
-        lx = max(ratio + 0.04, 1.07)  # 1.0배 기준선과 라벨이 겹치지 않도록
-        ax.text(lx, yy, f"{ratio:.2f}배", va="center", fontsize=10.5,
-                color=INK if ratio > 1 else MUTED,
-                fontweight="bold" if ratio > 1 else "normal")
-        ax.text(lx, yy - 0.32, f"감정글 {ae:.1f} vs 그 외 {an:.1f} (n={n})",
-                va="center", fontsize=8, color=MUTED)
+    ax.set_yticklabels([d["ch"] for d in data], fontsize=10.5, color=INK)
+    xmax = max(d["hi"] for d in data)
+    for yy, d in zip(y, data):
+        lx = max(d["hi"] + xmax * 0.03, 1.06)
+        sig = d["lo"] > 1
+        ax.text(lx, yy + 0.16, f"{d['ratio']:.2f}배  [{d['lo']:.2f}–{d['hi']:.2f}]",
+                va="center", fontsize=10, color=INK if sig else MUTED,
+                fontweight="bold" if sig else "normal")
+        ax.text(lx, yy - 0.09,
+                f"중앙값 {d['me']:.0f} vs {d['mn']:.0f} · 상위5 제외 {d['trim']:.2f}배",
+                va="center", fontsize=7.5, color=MUTED)
+        ax.text(lx, yy - 0.28, f"평균 {d['ae']:.1f} vs {d['an']:.1f} · n={d['ne']}/{d['nn']}",
+                va="center", fontsize=7.5, color=MUTED)
     ax.axvline(1.0, color=MUTED, lw=1, ls=(0, (4, 3)), zorder=0)
-    ax.text(1.0, len(labels) - 0.35, "1.0배 = 차이 없음", ha="center", fontsize=9, color=MUTED)
-    ax.set_xlim(0, max(ratios) * 1.25)
+    ax.text(1.0, len(data) - 0.3, "1.0배 = 차이 없음", ha="center", fontsize=9, color=MUTED)
+    ax.set_xlim(0, xmax * 1.42)
+    ax.set_ylim(-0.6, len(data) - 0.2)
 
-    top_ch, top_r = data[0][0], data[0][1]
+    top = data[0]
     title_block(fig,
-                f"감정 되먹임은 '물린 사람들의 방'에서만 작동한다 — {top_ch} {top_r:.2f}배",
-                "종목토론방에서는 감정글이 더 많은 공감을 받지만, 일반 경제채널에서는 오히려 덜 받는다")
+                f"{top['ch']}에서는 감정글의 평균 공감수가 비감정글보다 {top['ratio']:.2f}배 높았다",
+                "종목토론방에서는 감정 표현이 더 많은 반응을 얻었지만, 일반 경제채널에서는 "
+                "같은 패턴이 나타나지 않았다\n"
+                "→ 가로선은 부트스트랩 95% 신뢰구간. 중앙값·상위5개 제외 결과를 함께 표기해 "
+                "인기글 쏠림 여부를 확인할 수 있다")
     source_block(fig, "채널 내부 비교(채널 간 공감수 규모 차이 보정), 공감수 집계 가능 글 기준")
-    plt.subplots_adjust(top=0.72, bottom=0.13, left=0.20, right=0.97)
+    plt.subplots_adjust(top=0.70, bottom=0.12, left=0.18, right=0.97)
     plt.savefig(OUT / "chart3_amplification.png", dpi=150)
     plt.close()
     print("chart3 저장")
@@ -263,10 +322,19 @@ def chart4_keywords(rows):
         cnt.update(t.form for t in kiwi.tokenize(text)
                    if t.tag in ("NNG", "NNP") and len(t.form) > 1 and t.form not in STOPWORDS)
 
-    top = cnt.most_common(15)
+    # 상위어가 종목·채널 구성 때문에 올라온 건 아닌지 확인 (제거 전후 비교, 콘솔 출력)
+    DOMAIN_NOISE = {"삼성", "전자", "하이닉스", "에코", "프로", "카카오", "네이버", "현대",
+                    "테슬라", "엔비디아", "구독", "영상", "채널", "댓글", "링크"}
+    cnt_clean = Counter({k: v for k, v in cnt.items() if k not in DOMAIN_NOISE})
+    before = [k for k, _ in cnt.most_common(15)]
+    after = [k for k, _ in cnt_clean.most_common(15)]
+    print(f"  [chart4] 종목·채널어 제거 전후 상위15 일치: "
+          f"{len(set(before) & set(after))}/15 | 제거된 항목: {set(before) - set(after) or '없음'}")
+
+    top = cnt_clean.most_common(15)
     labels = [k for k, _ in top][::-1]
     vals = [v for _, v in top][::-1]
-    RATIONAL = {k for k, _ in top[:3]}  # 상위 3개 = 표면의 이성적 언어
+    RATIONAL = {k for k, _ in top[:3]}  # 상위 3개 = 표면의 정보·투자 언어
 
     fig, ax = plt.subplots(figsize=(9.5, 6))
     y = list(range(len(labels)))
@@ -283,10 +351,11 @@ def chart4_keywords(rows):
 
     top3 = "·".join(k for k, _ in top[:3])
     title_block(fig,
-                f"커뮤니티의 표면 언어는 이성적이다 — 상위 3개가 '{top3}'",
-                "충동은 글에 드러나지 않는다(명시적 감정 표현 13%) → 텍스트만으로는 감지 불가, "
-                "생체신호가 필요한 이유")
-    source_block(fig, "커뮤니티·댓글 텍스트 명사 기준")
+                f"빈도 상위 키워드는 {top3}였다 — 감정은 표면 어휘만으로 드러나지 않는다",
+                "명시적 감정 표현은 전체 게시글의 일부(13.4%)였고, 빈도 상위어는 정보·투자 관련 단어가 차지했다\n"
+                "→ 단순 키워드 분석만으로 주문 직전의 충동 상태를 포착하기 어렵고, "
+                "행동·생체신호를 결합할 필요성이 제기된다")
+    source_block(fig, "커뮤니티·댓글 텍스트 명사 기준, 종목명·채널 고유어 제외")
     plt.subplots_adjust(top=0.79, bottom=0.09, left=0.14, right=0.97)
     plt.savefig(OUT / "chart4_keywords.png", dpi=150)
     plt.close()
