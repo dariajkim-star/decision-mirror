@@ -10,10 +10,15 @@
 """
 import csv
 import hashlib
+import io
+import sys
 from collections import Counter
 from pathlib import Path
 
 from analyze import emotion_tag
+
+if hasattr(sys.stdout, "buffer"):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 BASE = Path(__file__).parent
 DATA = BASE / "data"
