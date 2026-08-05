@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>한 번 더</title>
+<style>
+  :root{--navy:#051C2C; --ink:#0e2233; --muted:#6E7B85; --line:#E4E8EB;
+        --bg:#F6F7F8; --card:#fff; --soft:#EEF1F3;}
+  *{box-sizing:border-box; margin:0; -webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{font-family:'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+       background:var(--bg); color:var(--ink); display:flex; flex-direction:column;
+       padding:env(safe-area-inset-top) 20px calc(16px + env(safe-area-inset-bottom))}
+  .top{display:flex; justify-content:flex-end; padding:14px 0 4px}
+  .x{font-size:22px; color:var(--muted); text-decoration:none; padding:6px 10px}
+  .wrap{flex:1; display:flex; flex-direction:column; max-width:430px; width:100%; margin:0 auto}
+  h1{font-size:24px; line-height:1.35; margin:8px 0 4px}
+  .sub{color:var(--muted); font-size:14px; margin-bottom:22px}
+  .opt{display:block; width:100%; padding:17px 16px; margin-bottom:10px;
+       border:1.5px solid var(--line); border-radius:14px; background:var(--card);
+       font-size:16.5px; font-weight:600; color:var(--ink); text-align:left; font-family:inherit}
+  .opt.sel{border-color:var(--navy); background:#EAF0F4}
+  .browse{display:block; text-align:center; color:var(--muted); font-size:14px;
+          margin:8px 0 0; text-decoration:none; padding:10px}
+  .actions{display:flex; gap:10px; margin-top:auto; padding-top:14px}
+  .stop{flex:1; padding:16px; border-radius:13px; background:none; font-family:inherit;
+        border:1.5px solid var(--line); color:var(--muted); font-size:15.5px}
+  .go{flex:1.2; padding:16px; border-radius:13px; background:var(--navy); color:#fff;
+      font-size:15.5px; font-weight:700; border:none; font-family:inherit}
+  .aux{margin-top:14px; background:var(--soft); border-radius:12px; padding:12px 15px;
+       font-size:13px; color:var(--muted); line-height:1.7}
+  .aux b{color:var(--ink)}
+  .ctx{background:#FBF4EF; border:1px solid #EAD9CD; border-radius:12px;
+       padding:11px 14px; font-size:13.5px; color:#7A4A2B; line-height:1.6; margin:6px 0 14px}
+  /* 거울·지수·설정 */
+  .h2{font-size:19px; font-weight:800; margin:14px 0 4px}
+  .disc{color:var(--muted); font-size:13px; line-height:1.6; margin-bottom:18px}
+  .mrow{margin-bottom:16px}
+  .mhead{display:flex; justify-content:space-between; font-size:14px; margin-bottom:6px}
+  .track{height:10px; background:var(--soft); border-radius:5px; position:relative}
+  .zero{position:absolute; left:50%; top:-3px; bottom:-3px; width:1px; background:#c9cfd4}
+  .bar{position:absolute; top:0; height:10px; border-radius:5px; background:var(--navy); opacity:.85}
+  .card{background:var(--soft); border-radius:12px; padding:12px 15px; font-size:12.5px;
+        color:var(--muted); line-height:1.7; margin-top:16px}
+  .nav{display:flex; gap:6px; margin-top:20px; justify-content:center; padding-bottom:6px}
+  .nav a{font-size:12.5px; color:var(--muted); text-decoration:none; padding:8px 10px}
+  .nav a.on{color:var(--navy); font-weight:700}
+  .bars{display:flex; align-items:flex-end; gap:10px; height:120px; margin:22px 4px 4px}
+  .bcol{flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%}
+  .b{width:70%; background:var(--soft); border-radius:4px 4px 0 0}
+  .b.cur{background:var(--navy)}
+  .bv{font-size:12px; color:var(--muted); margin-bottom:5px}
+  .bm{font-size:11.5px; color:var(--muted); margin-top:6px}
+  .btnrow{display:flex; gap:8px; margin-top:14px}
+  .small{flex:1; padding:12px; border-radius:11px; border:1.5px solid var(--line);
+         background:var(--card); font-size:13.5px; color:var(--ink); font-family:inherit}
+  textarea{width:100%; height:110px; border:1.5px solid var(--line); border-radius:11px;
+           padding:10px; font-size:12px; font-family:monospace; margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ── 한 번 더 프로토타입 골격 v0.1 ─────────────────────────────
+   SCREEN-SPEC v2.1 구현. 저장은 전부 localStorage(이 기기에만).
+   네이티브 단계에서 붙는 것: HealthKit 수면, H10 BLE(iOS 웹은 Web Bluetooth
+   미지원), H2 무작위 통과, 복수매매 자동 감지(거래내역 연동 후).
+──────────────────────────────────────────────────────────── */
+const LS = "hanbeondeo.records.v1";
+const load = () => JSON.parse(localStorage.getItem(LS) || "[]");
+const save = r => { const a = load(); a.push(r); localStorage.setItem(LS, JSON.stringify(a)); };
+const rec = (label, action) => {
+  save({ ts: new Date().toISOString(), label, action,
+         t_dwell: Date.now() - t0, ua: "web-proto-0.1" });
+};
+let t0 = Date.now(), selected = null;
+
+// 증권앱 복귀: URL 스킴을 아는 경우 설정에 저장해 사용 (예: kiwoom)
+const brokerScheme = () => localStorage.getItem("hanbeondeo.broker.scheme") || "";
+
+const LABELS = [ ["analysis","📊 분석/전략"], ["emotion","❤️ 감정/기분"], ["habit","🌱 습관/반복"] ];
+const NAME = { analysis:"분석/전략", emotion:"감정/기분", habit:"습관/반복", none:"무응답" };
+
+function goBroker(){
+  const s = brokerScheme();
+  if (s) location.href = s;               // 예: "kiwoomaccount://" 등 설정 시
+  else history.length > 1 ? history.back() : window.close();
+}
+
+/* ── 화면 ① 인터셉트 ── */
+function viewIntercept(){
+  t0 = Date.now(); selected = null;
+  el(`
+    <div class="top"><a class="x" href="#" onclick="doBrowse();return false">✕</a></div>
+    <h1>지금 이 매매의<br>이유는 무엇인가요?</h1>
+    <div class="sub">하나를 선택해 주세요</div>
+    ${LABELS.map(([k,t])=>`<button class="opt" id="opt-${k}" onclick="pick('${k}')">${t}</button>`).join("")}
+    <a class="browse" href="#" onclick="doBrowse();return false">시세만 볼게요 ›</a>
+    <div class="actions">
+      <button class="stop" onclick="doStop()">오늘은 그만</button>
+      <button class="go" onclick="doContinue()">계속하기</button>
+    </div>
+    <div class="aux">🔒 기록은 <b>이 기기에만</b> 저장돼요<br>
+      <span id="l1">심박 데이터 연결 전 · 수면 데이터 연결 전</span></div>
+    ${nav("intercept")}
+  `);
+}
+function pick(k){
+  selected = (selected === k) ? null : k;   // 토글
+  LABELS.forEach(([id]) => document.getElementById("opt-"+id).classList.toggle("sel", selected===id));
+}
+function doContinue(){ rec(selected ?? "none", "continue"); goBroker(); }
+function doBrowse(){ rec(null, "browse_only"); goBroker(); }
+function doStop(){ rec(selected, "stop_today"); location.hash = "#done"; }
+
+function viewDone(){
+  el(`<div style="margin:auto; text-align:center">
+    <div style="font-size:40px; margin-bottom:14px">🌙</div>
+    <h1 style="font-size:20px">오늘은 여기까지.</h1>
+    <div class="sub" style="margin-top:6px">기록해 뒀어요.</div></div>${nav("")}`);
+}
+
+/* ── 화면 ② 거울 ── */
+function viewMirror(){
+  const rs = load().filter(r => r.action !== "browse_only");
+  const by = {};
+  rs.filter(r => r.label && r.label !== "none").forEach(r => (by[r.label] = by[r.label]||[]).push(r));
+  const rows = Object.entries(by).map(([k,v]) => {
+    // 성과는 거래내역 연동 전이므로 건수만 (스펙: 3건 미만 수치 비표시와 동일 정신)
+    return `<div class="mrow"><div class="mhead"><b>${NAME[k]}
+      <span style="color:var(--muted);font-weight:400">${v.length}건</span></b>
+      <span style="color:var(--muted)">성과 집계 대기</span></div>
+      <div class="track"><span class="zero"></span></div></div>`;
+  }).join("") || `<div class="disc">아직 라벨 기록이 없어요.</div>`;
+  const total = rs.length, stops = rs.filter(r=>r.action==="stop_today").length;
+  el(`
+    <div class="h2">근거별 매매 기록</div>
+    <div class="disc">평가는 하지 않아요. 숫자는 당신의 기록이에요.</div>
+    ${rows}
+    <div class="card">🛡 인터셉트 ${total}회 · '오늘은 그만' ${stops}회<br>
+      30일 수익률은 거래내역(CSV) 연동 후 표시돼요.</div>
+    ${nav("mirror")}
+  `);
+}
+
+/* ── 화면 ③ 심리매매 지수 ── */
+function viewIndex(){
+  const rs = load().filter(r => r.label && r.label !== "none");
+  const mon = {};
+  rs.forEach(r => { const m = r.ts.slice(0,7);
+    (mon[m] = mon[m]||{p:0,t:0}).t++; if (r.label!=="analysis") mon[m].p++; });
+  const keys = Object.keys(mon).sort().slice(-4);
+  const bars = keys.map((m,i) => {
+    const v = Math.round(mon[m].p / mon[m].t * 100);
+    return `<div class="bcol"><div class="bv">${v}</div>
+      <div class="b ${i===keys.length-1?"cur":""}" style="height:${Math.max(v,4)}%"></div>
+      <div class="bm">${+m.slice(5)}월</div></div>`;
+  }).join("") || "";
+  el(`
+    <div class="h2">심리매매 지수</div>
+    <div class="disc">월 단위 · 매월 1일 갱신</div>
+    ${keys.length ? `<div class="bars">${bars}</div>` : `<div class="disc">라벨이 쌓이면 표시돼요.</div>`}
+    <div class="card">🛡 산식 및 기준: 고정<br>= (감정/기분 + 습관/반복) ÷ 전체 라벨 매매</div>
+    ${nav("index")}
+  `);
+}
+
+/* ── 설정·데이터 ── */
+function viewData(){
+  const rs = load();
+  el(`
+    <div class="h2">데이터</div>
+    <div class="disc">기록 ${rs.length}건 — 전부 이 기기(localStorage)에만 있어요.</div>
+    <div class="btnrow">
+      <button class="small" onclick="exportCsv()">CSV 내보내기</button>
+      <button class="small" onclick="if(confirm('기록을 모두 지울까요?')){localStorage.removeItem(LS);viewData()}">전체 삭제</button>
+    </div>
+    <div class="h2" style="margin-top:22px">증권앱 복귀 설정</div>
+    <div class="disc">증권앱의 URL 스킴을 알면 입력하세요. 비우면 '뒤로가기'로 동작해요.</div>
+    <input class="opt" style="font-weight:400" id="scheme" value="${brokerScheme()}"
+           placeholder="예: kiwoomaccount://" onchange="localStorage.setItem('hanbeondeo.broker.scheme',this.value)">
+    <div class="h2" style="margin-top:22px">최근 기록</div>
+    <textarea readonly>${rs.slice(-8).map(r=>`${r.ts.slice(5,16)} ${NAME[r.label]??"시세만"} ${r.action}`).join("\n")}</textarea>
+    ${nav("data")}
+  `);
+}
+function exportCsv(){
+  const rs = load();
+  const csv = "ts,label,action,t_dwell_ms\n" +
+    rs.map(r=>[r.ts, r.label??"", r.action, r.t_dwell].join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["﻿"+csv], {type:"text/csv"}));
+  a.download = "hanbeondeo_records.csv"; a.click();
+}
+
+/* ── 라우팅 ── */
+const el = h => document.getElementById("app").innerHTML = h;
+const nav = cur => `<div class="nav">
+  ${[["intercept","인터셉트"],["mirror","거울"],["index","지수"],["data","데이터"]]
+    .map(([k,t])=>`<a class="${cur===k?"on":""}" href="#${k}">${t}</a>`).join("")}</div>`;
+function route(){
+  const h = (location.hash||"#intercept").slice(1);
+  ({intercept:viewIntercept, mirror:viewMirror, index:viewIndex,
+    data:viewData, done:viewDone}[h] || viewIntercept)();
+}
+addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>
