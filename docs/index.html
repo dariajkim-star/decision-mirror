@@ -126,23 +126,33 @@ function viewDone(){
 
 /* ── 화면 ② 거울 ── */
 function viewMirror(){
-  const rs = load().filter(r => r.action !== "browse_only");
+  // 거울 v1 = 행동 사실만 (README §4 2층 구조 — 수익률은 유예된 2층, 대기실 문구 금지)
+  const all = load();
+  const rs = all.filter(r => r.action !== "browse_only");
+  const labeled = rs.filter(r => r.label && r.label !== "none");
   const by = {};
-  rs.filter(r => r.label && r.label !== "none").forEach(r => (by[r.label] = by[r.label]||[]).push(r));
+  labeled.forEach(r => (by[r.label] = by[r.label]||[]).push(r));
   const rows = Object.entries(by).map(([k,v]) => {
-    // 성과는 거래내역 연동 전이므로 건수만 (스펙: 3건 미만 수치 비표시와 동일 정신)
+    const pct = Math.round(v.length / labeled.length * 100);
     return `<div class="mrow"><div class="mhead"><b>${NAME[k]}
-      <span style="color:var(--muted);font-weight:400">${v.length}건</span></b>
-      <span style="color:var(--muted)">성과 집계 대기</span></div>
-      <div class="track"><span class="zero"></span></div></div>`;
+      <span style="color:var(--muted);font-weight:400">${v.length}건</span></b><span>${pct}%</span></div>
+      <div class="track"><span class="bar" style="left:0;width:${pct}%"></span></div></div>`;
   }).join("") || `<div class="disc">아직 라벨 기록이 없어요.</div>`;
-  const total = rs.length, stops = rs.filter(r=>r.action==="stop_today").length;
+  // 라벨별 평균 응답 시간 — 3건 미만 라벨군은 소표본 방어로 비표시
+  const dwell = Object.entries(by).filter(([,v]) => v.length >= 3)
+    .map(([k,v]) => `'${NAME[k]}'을 고르기까지 평균 <b>${(v.reduce((s,r)=>s+(r.t_dwell||0),0)/v.length/1000).toFixed(1)}초</b>`)
+    .join(", ");
+  const days = {}; rs.forEach(r => { const d = r.ts.slice(0,10); days[d]=(days[d]||0)+1; });
+  const multi = Object.values(days).filter(n=>n>=2).length;
+  const total = rs.length, stops = rs.filter(r=>r.action==="stop_today").length,
+        browse = all.filter(r=>r.action==="browse_only").length;
   el(`
     <div class="h2">근거별 매매 기록</div>
     <div class="disc">평가는 하지 않아요. 숫자는 당신의 기록이에요.</div>
     ${rows}
-    <div class="card">🛡 인터셉트 ${total}회 · '오늘은 그만' ${stops}회<br>
-      30일 수익률은 거래내역(CSV) 연동 후 표시돼요.</div>
+    ${dwell ? `<div class="disc" style="margin-top:14px">${dwell} 걸렸어요.${multi ? `<br>같은 날 두 번 이상 연 날이 <b>${multi}일</b> 있었어요.` : ""}</div>` : ""}
+    <div class="card">🛡 인터셉트 ${total}회 · '오늘은 그만' ${stops}회 · 시세만 ${browse}회<br>
+      라벨 응답률 ${total ? Math.round(labeled.length/total*100) : 0}%</div>
     ${nav("mirror")}
   `);
 }
