@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#051C2C">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>한 번 더</title>
 <style>
   :root{--navy:#051C2C; --ink:#0e2233; --muted:#6E7B85; --line:#E4E8EB;
@@ -91,8 +94,26 @@ function goBroker(){
   else history.length > 1 ? history.back() : window.close();
 }
 
+/* ── 스누즈 (FR-6) — 당일 발화 없음, 다음 날 자동 복귀 ── */
+const SNOOZE = "hanbeondeo.snooze";
+const today = () => new Date().toISOString().slice(0,10);
+const snoozed = () => localStorage.getItem(SNOOZE) === today();
+
 /* ── 화면 ① 인터셉트 ── */
 function viewIntercept(){
+  if (snoozed()){                    // 화면 없이 통과, 발화만 기록 (상태 매트릭스)
+    t0 = Date.now();
+    if (!load().some(r => r.action === "snooze" && r.ts.slice(0,10) === today()))
+      rec(null, "snooze");           // 스누즈 발화는 하루 1건만
+
+    el(`<div style="margin:auto; text-align:center">
+      <div style="font-size:40px; margin-bottom:14px">😴</div>
+      <h1 style="font-size:20px">오늘은 쉬는 날이에요.</h1>
+      <div class="sub" style="margin-top:6px">내일 다시 여쭤볼게요.</div>
+      <button class="go" style="margin-top:18px; padding:14px 28px" onclick="goBroker()">증권앱으로</button>
+      </div>${nav("intercept")}`);
+    return;
+  }
   t0 = Date.now(); selected = null;
   el(`
     <div class="top"><a class="x" href="#" onclick="doBrowse();return false">✕</a></div>
@@ -164,16 +185,20 @@ function viewIndex(){
   rs.forEach(r => { const m = r.ts.slice(0,7);
     (mon[m] = mon[m]||{p:0,t:0}).t++; if (r.label!=="analysis") mon[m].p++; });
   const keys = Object.keys(mon).sort().slice(-4);
+  // 소표본 방어: 라벨 3건 미만인 달은 수치 대신 유보 표시
   const bars = keys.map((m,i) => {
+    const small = mon[m].t < 3;
     const v = Math.round(mon[m].p / mon[m].t * 100);
-    return `<div class="bcol"><div class="bv">${v}</div>
-      <div class="b ${i===keys.length-1?"cur":""}" style="height:${Math.max(v,4)}%"></div>
+    return `<div class="bcol"><div class="bv">${small ? "·" : v}</div>
+      <div class="b ${i===keys.length-1?"cur":""}" style="height:${small ? 4 : Math.max(v,4)}%; ${small?"opacity:.35":""}"></div>
       <div class="bm">${+m.slice(5)}월</div></div>`;
   }).join("") || "";
+  const anySmall = keys.some(m => mon[m].t < 3);
   el(`
     <div class="h2">심리매매 지수</div>
     <div class="disc">월 단위 · 매월 1일 갱신</div>
     ${keys.length ? `<div class="bars">${bars}</div>` : `<div class="disc">라벨이 쌓이면 표시돼요.</div>`}
+    ${anySmall ? `<div class="disc" style="margin-top:8px">라벨 3건 미만인 달은 기록이 더 쌓이면 보여드릴게요.</div>` : ""}
     <div class="card">🛡 산식 및 기준: 고정<br>= (감정/기분 + 습관/반복) ÷ 전체 라벨 매매</div>
     ${nav("index")}
   `);
@@ -189,6 +214,10 @@ function viewData(){
       <button class="small" onclick="exportCsv()">CSV 내보내기</button>
       <button class="small" onclick="if(confirm('기록을 모두 지울까요?')){localStorage.removeItem(LS);viewData()}">전체 삭제</button>
     </div>
+    <div class="h2" style="margin-top:22px">스누즈</div>
+    <div class="disc">오늘 하루 질문을 쉬어요. 내일 자동으로 돌아와요.</div>
+    <button class="small" style="width:100%" onclick="toggleSnooze()">
+      ${snoozed() ? "오늘은 쉬는 중 — 다시 켜기" : "오늘 하루 쉬기"}</button>
     <div class="h2" style="margin-top:22px">증권앱 복귀 설정</div>
     <div class="disc">증권앱의 URL 스킴을 알면 입력하세요. 비우면 '뒤로가기'로 동작해요.</div>
     <input class="opt" style="font-weight:400" id="scheme" value="${brokerScheme()}"
@@ -197,6 +226,10 @@ function viewData(){
     <textarea readonly>${rs.slice(-8).map(r=>`${r.ts.slice(5,16)} ${NAME[r.label]??"시세만"} ${r.action}`).join("\n")}</textarea>
     ${nav("data")}
   `);
+}
+function toggleSnooze(){
+  snoozed() ? localStorage.removeItem(SNOOZE) : localStorage.setItem(SNOOZE, today());
+  viewData();
 }
 function exportCsv(){
   const rs = load();
@@ -219,6 +252,10 @@ function route(){
 }
 addEventListener("hashchange", route);
 route();
+
+/* ── PWA: 오프라인 캐시 등록 (지하철 대비) ── */
+if ("serviceWorker" in navigator && location.protocol === "https:")
+  navigator.serviceWorker.register("sw.js");
 </script>
 </body>
 </html>
