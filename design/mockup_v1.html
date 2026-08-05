@@ -1,0 +1,185 @@
+<!-- 한 번 더 — UX 목업 v1 (PRD v3 기준) -->
+<meta charset="utf-8">
+<title>한 번 더 — UX 목업 v1</title>
+<style>
+  :root{
+    --navy:#051C2C; --ink:#0e2233; --muted:#6E7B85; --line:#E4E8EB;
+    --bg:#F6F7F8; --card:#FFFFFF; --soft:#EEF1F3; --neg:#B4552D; --pos:#2E6E4E;
+  }
+  *{box-sizing:border-box; margin:0; -webkit-font-smoothing:antialiased}
+  body{font-family:'Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;
+       background:#e9ebee; color:var(--ink); padding:36px 20px}
+  h1{font-size:20px; margin-bottom:4px}
+  .sub{color:var(--muted); font-size:13px; margin-bottom:28px}
+  .row{display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start}
+  .col{width:300px}
+  .label{font-size:13px; font-weight:bold; margin:0 0 10px 4px}
+  .note{font-size:11.5px; color:var(--muted); margin:10px 4px 0; line-height:1.55}
+
+  .phone{width:300px; height:610px; background:var(--bg); border-radius:38px;
+         border:8px solid #1b1b1d; overflow:hidden; display:flex; flex-direction:column;
+         box-shadow:0 12px 30px rgba(0,0,0,.18)}
+  .status{height:34px; display:flex; justify-content:space-between; align-items:center;
+          padding:0 22px; font-size:11px; color:var(--muted)}
+  .screen{flex:1; padding:10px 20px 16px; display:flex; flex-direction:column}
+
+  .brand{font-size:12px; letter-spacing:.14em; color:var(--muted); text-align:center; margin-bottom:6px}
+  .q{font-size:21px; font-weight:800; text-align:center; line-height:1.35; margin:14px 0 20px}
+  .btn{display:block; width:100%; padding:16px 14px; margin-bottom:10px; border:1.5px solid var(--line);
+       border-radius:14px; background:var(--card); font-size:15.5px; font-weight:600; text-align:center; color:var(--ink)}
+  .btn small{display:block; font-weight:400; font-size:11.5px; color:var(--muted); margin-top:3px}
+  .aux{margin-top:auto; background:var(--soft); border-radius:12px; padding:11px 14px;
+       font-size:12.5px; color:var(--muted); line-height:1.7}
+  .aux b{color:var(--ink); font-weight:600}
+  .actions{display:flex; gap:10px; margin-top:12px}
+  .go{flex:1; padding:14px; border-radius:12px; background:var(--navy); color:#fff;
+      font-size:14.5px; font-weight:700; text-align:center}
+  .stop{flex:1; padding:14px; border-radius:12px; background:none; border:1.5px solid var(--line);
+        color:var(--muted); font-size:14.5px; text-align:center}
+  .ctx{background:#FBF4EF; border:1px solid #EAD9CD; border-radius:12px; padding:10px 13px;
+       font-size:12.5px; color:#7A4A2B; line-height:1.6; margin-bottom:14px}
+
+  /* 거울 화면 */
+  .h2{font-size:17px; font-weight:800; margin:8px 0 3px}
+  .period{font-size:11.5px; color:var(--muted); margin-bottom:16px}
+  .mrow{margin-bottom:18px}
+  .mhead{display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px}
+  .mhead b{font-weight:700}
+  .mhead .v{font-weight:800}
+  .neg{color:var(--neg)} .pos{color:var(--pos)}
+  .track{height:10px; background:var(--soft); border-radius:5px; position:relative}
+  .track .zero{position:absolute; left:50%; top:-3px; bottom:-3px; width:1px; background:#c9cfd4}
+  .bar{position:absolute; top:0; height:10px; border-radius:5px}
+  .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:4px}
+  .chip{font-size:11px; color:var(--muted); background:var(--soft); border-radius:8px; padding:3px 8px}
+  .divider{height:1px; background:var(--line); margin:16px 0}
+  .fact{font-size:13px; line-height:1.75; color:var(--ink)}
+  .fact .mut{color:var(--muted)}
+
+  /* 지수 화면 */
+  .big{font-size:44px; font-weight:800; letter-spacing:-.02em}
+  .big small{font-size:15px; font-weight:600; color:var(--muted); margin-left:4px}
+  .spark{display:flex; align-items:flex-end; gap:7px; height:86px; margin:18px 2px 6px}
+  .sp{flex:1; background:var(--soft); border-radius:4px 4px 0 0; position:relative}
+  .sp.cur{background:var(--navy)}
+  .sp span{position:absolute; top:-19px; left:0; right:0; text-align:center; font-size:10.5px; color:var(--muted)}
+  .sp.cur span{color:var(--navy); font-weight:700}
+  .months{display:flex; gap:7px; margin-bottom:14px}
+  .months div{flex:1; text-align:center; font-size:10.5px; color:var(--muted)}
+</style>
+
+<h1>한 번 더 — UX 목업 v1</h1>
+<div class="sub">PRD v3 기준 · 3초 판독 · 한 손 · 판정 문구 없음 · 게이미피케이션 없음</div>
+
+<div class="row">
+
+  <!-- ① 인터셉트 -->
+  <div class="col">
+    <div class="label">① 인터셉트 — 증권앱을 여는 순간</div>
+    <div class="phone"><div class="status"><span>8:42</span><span>🔋</span></div>
+      <div class="screen">
+        <div class="brand">한 번 더</div>
+        <div class="q">이 매수의 근거는?</div>
+        <a class="btn">실적·분석이 있다</a>
+        <a class="btn">분위기·감이다</a>
+        <a class="btn">모르겠다</a>
+        <div class="aux">
+          지금 심박 <b>평소 +14</b> · 어젯밤 수면 <b>5h 10m</b>
+        </div>
+        <div class="actions">
+          <a class="stop">오늘은 그만</a>
+          <a class="go">계속하기</a>
+        </div>
+      </div>
+    </div>
+    <div class="note">질문이 화면의 전부. 버튼을 안 눌러도 [계속하기]로 통과 가능 — 무응답도 기록된다(FR-5). 생체는 하단 보조 한 줄(L1), H10 미착용 시 수면만 표시.</div>
+  </div>
+
+  <!-- ①b 복수매매 변형 -->
+  <div class="col">
+    <div class="label">①b 복수매매 변형 — 손실 중 종목 재진입 감지 시</div>
+    <div class="phone"><div class="status"><span>10:17</span><span>🔋</span></div>
+      <div class="screen">
+        <div class="brand">한 번 더</div>
+        <div class="ctx">이 종목은 현재 <b>−18%</b> 보유 중이에요.<br>직전 매수는 7월 22일이었어요.</div>
+        <div class="q">이번 매수의 근거는?</div>
+        <a class="btn">실적·분석이 있다</a>
+        <a class="btn">분위기·감이다</a>
+        <a class="btn">모르겠다</a>
+        <div class="actions" style="margin-top:auto">
+          <a class="stop">오늘은 그만</a>
+          <a class="go">계속하기</a>
+        </div>
+      </div>
+    </div>
+    <div class="note">맥락은 <b>사실 두 줄</b>만 — "물타기네요" 같은 명명·판정 없음(FR-15, L3 금지). 보유 손익과 직전 매수일은 체결 이력에서 자동 산출.</div>
+  </div>
+
+  <!-- ② 거울 -->
+  <div class="col">
+    <div class="label">② 거울(L2) — 근거별 내 성적표</div>
+    <div class="phone"><div class="status"><span>20:31</span><span>🔋</span></div>
+      <div class="screen">
+        <div class="brand">한 번 더</div>
+        <div class="h2">근거별 30일 성과</div>
+        <div class="period">최근 90일 · 매수 12건 기준</div>
+
+        <div class="mrow">
+          <div class="mhead"><b>분위기·감이다 <span style="color:var(--muted);font-weight:400">7건</span></b>
+            <span class="v neg">−12.4%</span></div>
+          <div class="track"><span class="zero"></span><span class="bar neg" style="right:50%;width:38%;background:var(--neg)"></span></div>
+        </div>
+        <div class="mrow">
+          <div class="mhead"><b>실적·분석이 있다 <span style="color:var(--muted);font-weight:400">3건</span></b>
+            <span class="v pos">+2.1%</span></div>
+          <div class="track"><span class="zero"></span><span class="bar pos" style="left:50%;width:7%;background:var(--pos)"></span></div>
+        </div>
+        <div class="mrow">
+          <div class="mhead"><b>모르겠다 <span style="color:var(--muted);font-weight:400">2건</span></b>
+            <span class="v neg">−5.0%</span></div>
+          <div class="track"><span class="zero"></span><span class="bar neg" style="right:50%;width:15%;background:#C99B82"></span></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="fact">
+          '분위기·감' 매수의 평균 보유기간은 <b>4일</b>,<br>
+          '실적·분석' 매수는 <b>21일</b>이었어요.<br>
+          <span class="mut">평가는 하지 않아요. 숫자는 당신의 기록이에요.</span>
+        </div>
+        <div class="chips" style="margin-top:auto">
+          <span class="chip">체결내역 12건 매칭됨</span>
+          <span class="chip">라벨 응답률 83%</span>
+        </div>
+      </div>
+    </div>
+    <div class="note">"좋다/나쁘다" 없음 — 수치와 사실 문장만. 0 기준 양방향 막대(맥킨지 문법). 하단 칩은 운영 정보만(허용 목록).</div>
+  </div>
+
+  <!-- ③ 심리매매 지수 -->
+  <div class="col">
+    <div class="label">③ 월간 회고 — 심리매매 지수</div>
+    <div class="phone"><div class="status"><span>일요일</span><span>🔋</span></div>
+      <div class="screen">
+        <div class="brand">한 번 더</div>
+        <div class="h2">심리매매 지수</div>
+        <div class="period">'분위기·감' + '모르겠다' 라벨의 비율 · 월 1회 갱신</div>
+        <div class="big">33%<small>7월</small></div>
+        <div class="spark">
+          <div class="sp" style="height:78%"><span>52</span></div>
+          <div class="sp" style="height:68%"><span>45</span></div>
+          <div class="sp" style="height:60%"><span>40</span></div>
+          <div class="sp cur" style="height:50%"><span>33</span></div>
+        </div>
+        <div class="months"><div>4월</div><div>5월</div><div>6월</div><div>7월</div></div>
+        <div class="divider"></div>
+        <div class="fact">
+          7월 매수 9건 중 '분위기·감' 3건.<br>
+          <span class="mut">4월의 절반 수준이에요 — 라는 말도 하지 않아요.<br>추이는 막대가 말합니다.</span>
+        </div>
+      </div>
+    </div>
+    <div class="note">월 단위만(실시간 점수판 금지). 목표선·달성률·"좋아졌어요" 없음. 현재 월만 네이비 강조 — 색 하나에 의미 하나.</div>
+  </div>
+
+</div>
+</html>
