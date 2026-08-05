@@ -1,0 +1,197 @@
+<!-- 한 번 더 — 디자인 시안 v2.1 (daria 디자인 v2 + 기획 정합 수정 4건 반영, SCREEN-SPEC.md v2.1 기준) -->
+<meta charset="utf-8">
+<title>한 번 더 — 시안 v2.1</title>
+<style>
+  :root{
+    --navy:#1B2B4B; --ink:#1B2B4B; --muted:#8A94A3; --line:#E3E6EB;
+    --bg:#FFFFFF; --page:#F4F5F7; --soft:#F5F6F8;
+  }
+  *{box-sizing:border-box; margin:0; -webkit-font-smoothing:antialiased}
+  body{font-family:'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+       background:var(--page); color:var(--ink); padding:40px 24px}
+  h1{font-size:20px; margin-bottom:4px}
+  .sub{color:var(--muted); font-size:13px; margin-bottom:30px}
+  .row{display:flex; gap:30px; flex-wrap:wrap; align-items:flex-start}
+  .col{width:310px}
+  .label{font-size:13px; font-weight:bold; margin:0 0 10px 4px}
+  .note{font-size:11.5px; color:var(--muted); margin:10px 4px 0; line-height:1.6}
+  .note b{color:var(--ink)}
+  .fix{display:inline-block; background:var(--navy); color:#fff; font-size:10px;
+       border-radius:6px; padding:1px 6px; margin-right:4px; vertical-align:1px}
+
+  .phone{width:310px; height:640px; background:var(--bg); border-radius:40px;
+         border:1px solid var(--line); overflow:hidden; display:flex; flex-direction:column;
+         box-shadow:0 14px 34px rgba(27,43,75,.10)}
+  .status{height:40px; display:flex; justify-content:space-between; align-items:center;
+          padding:0 26px; font-size:12px; font-weight:600; color:var(--ink)}
+  .screen{flex:1; padding:4px 24px 18px; display:flex; flex-direction:column; position:relative}
+  .x{position:absolute; top:2px; right:22px; font-size:20px; color:var(--ink); text-decoration:none}
+  .back{font-size:18px; color:var(--ink); margin:2px 0 6px; text-decoration:none}
+  .home{height:5px; width:120px; background:var(--ink); border-radius:3px; margin:10px auto 8px}
+
+  .q{font-size:22px; font-weight:800; line-height:1.4; margin:44px 0 8px; letter-spacing:-.01em}
+  .q.tight{margin-top:16px}
+  .hint{font-size:13px; color:var(--muted); margin-bottom:20px}
+  .btn{display:flex; align-items:center; gap:12px; width:100%; padding:17px 16px; margin-bottom:12px;
+       border:1px solid var(--line); border-radius:14px; background:var(--bg);
+       font-size:15px; font-weight:600; color:var(--ink); text-decoration:none}
+  .btn .ic{font-size:16px}
+  .browse{display:block; text-align:center; font-size:13.5px; color:var(--muted);
+          margin:4px 0 0; text-decoration:none}
+  .actions{display:flex; gap:10px; margin-top:14px}
+  .stopb{flex:1; padding:15px; border-radius:13px; background:none; border:1px solid var(--line);
+         color:var(--ink); font-size:14.5px; font-weight:600; text-align:center; text-decoration:none}
+  .go{flex:1; padding:15px; border-radius:13px; background:var(--navy); color:#fff;
+      font-size:14.5px; font-weight:700; text-align:center; text-decoration:none}
+  .aux{margin-top:auto; border:1px solid var(--line); border-radius:14px; padding:13px 16px;
+       font-size:12.5px; color:var(--muted); line-height:1.7; display:flex; gap:12px; align-items:center}
+  .aux .body b{color:var(--ink); font-weight:600}
+  .ctx{border:1px solid var(--line); background:var(--soft); border-radius:14px; padding:12px 15px;
+       font-size:13px; color:var(--ink); line-height:1.65; margin-top:34px}
+
+  .h2{font-size:20px; font-weight:800; line-height:1.35; margin:14px 0 4px}
+  .period{font-size:12.5px; color:var(--muted); margin-bottom:14px}
+  .disc{font-size:13px; color:var(--muted); line-height:1.7; margin-bottom:18px}
+  .axis{display:flex; justify-content:space-between; font-size:11px; color:var(--muted);
+        padding-left:96px; margin-bottom:6px}
+  .mrow{display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:12.5px}
+  .mname{width:88px; line-height:1.4}
+  .mname small{display:block; color:var(--muted); font-size:11px}
+  .track{flex:1; height:16px; position:relative}
+  .track .zero{position:absolute; left:50%; top:-4px; bottom:-4px; width:1px; background:var(--line)}
+  .bar{position:absolute; top:1px; height:14px; background:var(--navy); border-radius:3px}
+  .val{width:44px; font-weight:700; font-size:12.5px}
+  .fact{font-size:13px; line-height:1.75; margin-top:4px}
+  .card{margin-top:auto; border:1px solid var(--line); border-radius:14px; padding:13px 16px;
+        font-size:12.5px; color:var(--muted); line-height:1.7; display:flex; gap:12px; align-items:center}
+  .card b{color:var(--ink); font-weight:600}
+
+  .spark{display:flex; align-items:flex-end; gap:26px; height:220px; margin:26px 8px 8px}
+  .sp{flex:1; background:#C9D0DC; border-radius:3px; position:relative}
+  .sp.cur{background:var(--navy)}
+  .sp span{position:absolute; top:-22px; left:0; right:0; text-align:center; font-size:13px;
+           font-weight:700; color:var(--ink)}
+  .months{display:flex; gap:26px; margin:0 8px}
+  .months div{flex:1; text-align:center; font-size:12px; color:var(--muted)}
+</style>
+
+<h1>한 번 더 — 디자인 시안 v2.1</h1>
+<div class="sub">daria 디자인 v2 + 기획 정합 수정 4건 · SCREEN-SPEC.md v2.1 기준 · 판정 문구 없음 · 게이미피케이션 없음</div>
+
+<div class="row">
+
+  <!-- ① 인터셉트 -->
+  <div class="col">
+    <div class="label">① 인터셉트 — 증권앱을 여는 순간</div>
+    <div class="phone"><div class="status"><span>9:41</span><span>🔋</span></div>
+      <div class="screen">
+        <a class="x" href="#">✕</a>
+        <div class="q">지금 이 매매의<br>이유는 무엇인가요?</div>
+        <div class="hint">하나를 선택해 주세요</div>
+        <a class="btn"><span class="ic">📊</span>분석/전략</a>
+        <a class="btn"><span class="ic">❤️</span>감정/기분</a>
+        <a class="btn"><span class="ic">🌱</span>습관/반복</a>
+        <a class="browse" href="#">시세만 볼게요 ›</a>
+        <div class="actions">
+          <a class="stopb" href="#">오늘은 그만</a>
+          <a class="go" href="#">계속하기</a>
+        </div>
+        <div class="aux"><span>🔒</span>
+          <span class="body">기록은 <b>이 기기에만</b> 저장돼요<br>심박 <b>평소보다 +14</b> · 어젯밤 수면 <b>6h 20m</b></span>
+        </div>
+        <div class="home"></div>
+      </div>
+    </div>
+    <div class="note">
+      <span class="fix">수정①</span><b>[오늘은 그만] 복원</b> — one sec 효과 1위 프리미티브, 보조 스타일이되 항상 표시(FR-4).<br>
+      <span class="fix">수정②</span>L1은 <b>기준선 대비 편차</b>("평소보다 +14") — 절대값(72bpm) 금지. H10 미착용 시 수면만.<br>
+      <span class="fix">수정③</span><b>"시세만 볼게요"</b> 무라벨 통과 링크 신설 — [X]와 동일 동작·동일 기록(browse_only).<br>
+      <span class="fix">수정④</span>저장 문구 <b>"이 기기에만"</b> — '익명' 금지(온디바이스가 사실, NFR-6).
+    </div>
+  </div>
+
+  <!-- ①b 복수매매 변형 -->
+  <div class="col">
+    <div class="label">①b 복수매매 변형 — 손실 중 종목 재진입 감지 시</div>
+    <div class="phone"><div class="status"><span>9:41</span><span>🔋</span></div>
+      <div class="screen">
+        <a class="x" href="#">✕</a>
+        <div class="ctx">이 종목은 현재 <b>−18%</b> 보유 중이에요.<br>직전 매수는 <b>7월 22일</b>이었어요.</div>
+        <div class="q tight">지금 이 매매의<br>이유는 무엇인가요?</div>
+        <div class="hint">하나를 선택해 주세요</div>
+        <a class="btn"><span class="ic">📊</span>분석/전략</a>
+        <a class="btn"><span class="ic">❤️</span>감정/기분</a>
+        <a class="btn"><span class="ic">🌱</span>습관/반복</a>
+        <a class="browse" href="#">시세만 볼게요 ›</a>
+        <div class="actions">
+          <a class="stopb" href="#">오늘은 그만</a>
+          <a class="go" href="#">계속하기</a>
+        </div>
+        <div class="home"></div>
+      </div>
+    </div>
+    <div class="note">맥락 카드는 <b>사실 2줄</b>만(보유 손익률·직전 매수일) — 명명·판정 없음, 경고색 없음(중립 유지, FR-15·L3 금지). 기록에 <b>context=reentry</b> 플래그. 나머지 요소·기록은 ①과 동일.</div>
+  </div>
+
+  <!-- ② 거울 -->
+  <div class="col">
+    <div class="label">② 거울(L2) — 근거별 매매 성과</div>
+    <div class="phone"><div class="status"><span>9:41</span><span>🔋</span></div>
+      <div class="screen">
+        <a class="back" href="#">‹</a>
+        <div class="h2">최근 30일<br>근거별 매매 성과</div>
+        <div class="disc">평가는 하지 않아요.<br>숫자는 당신의 기록이에요.</div>
+        <div class="period">30일 수익률(%)</div>
+        <div class="axis"><span>−20</span><span>0</span><span>+20</span></div>
+        <div class="mrow">
+          <div class="mname">분석/전략<small>3건</small></div>
+          <div class="track"><span class="zero"></span><span class="bar" style="left:50%;width:19%"></span></div>
+          <div class="val">+8.7</div>
+        </div>
+        <div class="mrow">
+          <div class="mname">감정/기분<small>5건</small></div>
+          <div class="track"><span class="zero"></span><span class="bar" style="right:50%;width:14%"></span></div>
+          <div class="val">−6.3</div>
+        </div>
+        <div class="mrow">
+          <div class="mname">습관/반복<small>4건</small></div>
+          <div class="track"><span class="zero"></span><span class="bar" style="right:50%;width:25%"></span></div>
+          <div class="val">−11.2</div>
+        </div>
+        <div class="fact">'감정/기분' 매매의 평균 보유기간은 <b>4일</b>,<br>'분석/전략'은 <b>21일</b>이에요.</div>
+        <div class="card"><span>🛡</span>
+          <span>데이터 범위: <b>최근 30일</b> · 종목/시간: 전체<br><b>12건</b> 매칭 · 라벨 응답률 <b>83%</b> · 집계 대기 <b>2건</b></span>
+        </div>
+        <div class="home"></div>
+      </div>
+    </div>
+    <div class="note">막대는 0 기준 양방향·값 직접 라벨·<b>전부 중립 네이비</b>(수익=초록/손실=빨강 금지). <b>건수 표기 필수</b>, 라벨군 3건 미만이면 수치 대신 "기록이 더 쌓이면 보여드릴게요". 수익률 미확정 건은 집계 제외 후 "집계 대기 N건"으로 명시.</div>
+  </div>
+
+  <!-- ③ 심리매매 지수 -->
+  <div class="col">
+    <div class="label">③ 심리매매 지수 — 월 1회 갱신</div>
+    <div class="phone"><div class="status"><span>9:41</span><span>🔋</span></div>
+      <div class="screen">
+        <a class="back" href="#">‹</a>
+        <div class="h2">심리매매 지수</div>
+        <div class="period">월 단위</div>
+        <div class="spark">
+          <div class="sp" style="height:78%"><span>52</span></div>
+          <div class="sp" style="height:67%"><span>45</span></div>
+          <div class="sp" style="height:60%"><span>40</span></div>
+          <div class="sp cur" style="height:49%"><span>33</span></div>
+        </div>
+        <div class="months"><div>5월</div><div>6월</div><div>7월</div><div>8월</div></div>
+        <div class="fact" style="margin-top:18px">8월 매매 <b>9건</b> 중<br>감정/기분·습관/반복 <b>3건</b>.</div>
+        <div class="card"><span>🛡</span>
+          <span>산식 및 기준: <b>고정</b><br>= (감정/기분 + 습관/반복) ÷ 전체 라벨 매매<br>업데이트: <b>매월 1일</b></span>
+        </div>
+        <div class="home"></div>
+      </div>
+    </div>
+    <div class="note">산식을 카드에 <b>병기</b>(신뢰 장치). 현재 월만 네이비 강조 — 색 하나에 의미 하나. 추세 코멘트·목표선·달성률·연속기록 없음. 추이는 막대가 말한다.</div>
+  </div>
+
+</div>
+</html>
